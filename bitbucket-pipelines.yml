@@ -1,0 +1,26 @@
+image: node:14.0.0
+pipelines:
+  branches:
+    develop:
+      - step:
+          name: Build and package
+          caches:
+            - node
+          script:
+            - npm install
+            - npm i pg
+            - apt-get update && apt-get install -y zip
+            - zip -r bot_ezfront_adama.zip *
+          artifacts:
+            - bot_ezfront_adama.zip
+      - step:
+          name: Update Lambda code
+          script:
+            - pipe: atlassian/aws-lambda-deploy:0.2.1
+              variables:
+                AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+                AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+                AWS_DEFAULT_REGION: ${AWS_REGION}
+                FUNCTION_NAME: ${AWS_LAMBDA_FUNCTION_NAME}
+                COMMAND: 'update'
+                ZIP_FILE: 'bot_ezfront_adama.zip'
